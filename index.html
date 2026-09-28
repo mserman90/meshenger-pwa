@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MeshengerTR - Kesintisiz Mesh İletişim & Enkaz Dinleme PWA</title>
+    
+    <!-- Meta & PWA Config -->
+    <meta name="description" content="MeshengerTR - İnternetsiz Peer-to-Peer Sesli/Yazılı Görüşme ve ISO 22324 Uyumlu Enkaz Dinleme & Acil Sinyal Uygulaması">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MeshengerTR">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Header & ISO 22324 Emergency Banner -->
+    <header class="app-header">
+        <div class="header-main">
+            <div class="brand">
+                <span class="brand-logo">📡</span>
+                <div class="brand-text">
+                    <h1>MeshengerTR</h1>
+                    <span class="badge badge-beta">BETA v1.2</span>
+                    <span class="badge badge-iso">ISO 22324</span>
+                </div>
+            </div>
+            <button id="pwa-install-btn" class="btn btn-small btn-secondary" style="display: none;">
+                📲 Uygulamayı Yükle
+            </button>
+        </div>
+        
+        <!-- Network & Mesh Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot online" id="net-status-dot"></span>
+                <span id="net-status-text">P2P Ağ: Hazır</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot info" id="peers-count-dot"></span>
+                <span id="peers-count-text">0 Aktif Düğüm</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Application Container -->
+    <main class="app-container">
+        
+        <!-- TAB 1: DISASTER BEACON & AUDIO AMPLIFIER (ENKAZ DİNLEME) -->
+        <section id="tab-beacon" class="tab-content active">
+            
+            <!-- ISO 22324 Warning Alert Box -->
+            <div class="alert alert-danger" role="alert">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-body">
+                    <strong>ACİL DURUM MODU (ISO 22324 Kırmızı Seviye)</strong>
+                    <p>Bu bölüm afet, deprem ve enkaz arama-kurtarma durumlarında hayati sinyalizasyon ve ses analizi içindir.</p>
+                </div>
+            </div>
+
+            <!-- Rubble Audio Listener & Amplifier Panel -->
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h3>🎧 Enkaz Ses Dinleyici ve Amplifikatör</h3>
+                    <span class="tag tag-danger">300Hz Süzgeçli</span>
+                </div>
+                <div class="card-body">
+                    <p class="description-text">
+                        Enkaz altındaki düşük ve yüksek frekanslı yaşam seslerini (tıklama, nefes, vurma) 300Hz yüksek-geçiren filtre ve özel frekans yükseltici ile berraklaştırır.
+                    </p>
+
+                    <!-- Peak Warning Indicator -->
+                    <div id="peak-warning" class="peak-warning-box" style="display: none;">
+                        🚨 SES TESPİT EDİLDİ! ENKAZ ALTINDAN YÜKSEK FREKANSLI SES/TIKLAMA ALINDI 🚨
+                    </div>
+
+                    <!-- Audio Spectrogram / Visualizer Canvas -->
+                    <div class="canvas-container">
+                        <canvas id="audio-visualizer" width="600" height="150"></canvas>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="control-group">
+                        <button id="btn-mic-toggle" class="btn btn-primary btn-block btn-lg">
+                            🎙️ Mikrofona Eriş & Dinlemeyi Başlat
+                        </button>
+                    </div>
+
+                    <div class="control-grid">
+                        <div class="control-item">
+                            <label for="filter-toggle"><strong>300Hz Yüksek-Geçiren Süzgeç:</strong></label>
+                            <input type="checkbox" id="filter-toggle" checked>
+                        </div>
+                        <div class="control-item">
+                            <label for="gain-select"><strong>Kazanç / Amplifikasyon Gücü:</strong></label>
+                            <select id="gain-select" class="form-select">
+                                <option value="1">1x (Normal Ses)</option>
+                                <option value="3">3x Güçlendirme</option>
+                                <option value="5" selected>5x Güçlendirme (Önerilen)</option>
+                                <option value="10">10x Maksimum Hassasiyet</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acoustic Whistle Siren & Strobe SOS -->
+            <div class="card glass-card margin-top">
+                <div class="card-header">
+                    <h3>🔊 Akustik Düdük & Flaş SOS Sinyali</h3>
+                    <span class="tag tag-warning">ISO 22324 Sarı Seviye</span>
+                </div>
+                <div class="card-body">
+                    <p class="description-text">
+                        Arama kurtarma ekiplerinin sizi bulmasını kolaylaştırmak için 3.5 kHz yüksek frekanslı akustik düdük ve ekran flaşör sinyali yayar.
+                    </p>
+                    <div class="button-group-responsive">
+                        <button id="btn-whistle-toggle" class="btn btn-warning btn-lg">
+                            📢 3.5 kHz Akustik Düdük Başlat
+                        </button>
+                        <button id="btn-strobe-toggle" class="btn btn-danger btn-lg">
+                            ⚡ SOS Ekran Flaşı Başlat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPS Emergency Beacon Location -->
+            <div class="card glass-card margin-top">
+                <div class="card-header">
+                    <h3>📍 Acil Durum Konum Yayını</h3>
+                    <span class="tag tag-info">GPS / P2P</span>
+                </div>
+                <div class="card-body">
+                    <p class="description-text">
+                        Enkaz altında veya acil durumda son bilinen GPS koordinatlarınızı yerel Wi-Fi/Bluetooth ağındaki yakındaki kurtarma düğümlerine paylaşır.
+                    </p>
+                    <div id="location-display" class="location-box">
+                        Konum henüz alınmadı. Aşağıdaki butondan GPS koordinatlarını alabilirsiniz.
+                    </div>
+                    <button id="btn-share-location" class="btn btn-info btn-block margin-top-sm">
+                        📍 Konumumu Al ve Yakın Ağda Yayınla
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CONTACTS -->
+        <section id="tab-contacts" class="tab-content">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h3>👥 Yakın Ağdaki Düğümler ve Kişiler</h3>
+                    <button class="btn btn-small btn-outline" onclick="alert('Yakındaki Wi-Fi/Bluetooth Mesh cihazları taranıyor...')">🔄 Tara</button>
+                </div>
+                <div class="card-body">
+                    <p class="description-text">
+                        İnternet veya GSM şebekesi olmasa dahi, Wi-Fi Direct ve P2P mesh protokolü üzerinden menzildeki diğer MeshengerTR kullanıcıları listelenir.
+                    </p>
+                    <div class="empty-state">
+                        <span class="empty-icon">📡</span>
+                        <h4>Cihaz Aranıyor</h4>
+                        <p>Yakınınızda yerel ağa bağlı aktif MeshengerTR düğümü aranamadı. Cihazınızın Wi-Fi veya Hotspot özelliğinin açık olduğundan emin olun.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: CALLS & MESSAGES -->
+        <section id="tab-calls" class="tab-content">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h3>💬 P2P Sesli Görüşme ve Mesajlaşma</h3>
+                </div>
+                <div class="card-body">
+                    <p class="description-text">
+                        Uçtan uca şifreli, sunucusuz ve merkeziyetsiz doğrudan cihazdan cihaza haberleşme kanalı.
+                    </p>
+                    <div class="chat-placeholder">
+                        <div class="alert alert-info">
+                            💡 MeshengerTR, WebRTC ve P2P Mesh teknolojisi kullanarak herhangi bir merkez sunucu olmadan mesaj iletmektedir.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: ABOUT, CREDITS & LEGAL DISCLAIMER -->
+        <section id="tab-about" class="tab-content">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h3>ℹ️ MeshengerTR Hakkında ve Yasal Uyarılar</h3>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="about-section">
+                        <h4>📌 Proje Amacı ve Açıklaması</h4>
+                        <p>
+                            <strong>MeshengerTR</strong>, olası doğal afetlerde (deprem, sel, toprak kayması vb.) şebekelerin çökmesi durumunda internet ve GSM sinyaline ihtiyaç duymadan, cihazlar arası P2P (Peer-to-Peer) mesh ağı kurarak kesintisiz haberleşme, acil durum konum paylaşımı ve ISO 22324 uyumlu enkaz dinleme/amplifikasyon imkanı sunan açık kaynaklı bir PWA uygulamasıdır.
+                        </p>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="about-section">
+                        <h4>🔗 Kaynak Kod ve Orijinal Açık Kaynak Projeler</h4>
+                        <p>MeshengerTR, aşağıdaki saygın açık kaynak projelerden ve topluluk araştırmalarından esinlenilerek ve kaynak gösterilerek geliştirilmiştir:</p>
+                        
+                        <ul class="source-list">
+                            <li>
+                                <strong>Meshenger Android App (Upstream Original):</strong><br>
+                                <a href="https://github.com/meshenger-app/meshenger-android" target="_blank" rel="noopener noreferrer">
+                                    https://github.com/meshenger-app/meshenger-android
+                                </a>
+                                <p class="source-desc">P2P şifreli sesli/görüntülü görüşme ve sunucusuz mesh haberleşme mimarisi.</p>
+                            </li>
+                            <li>
+                                <strong>Enkaz Dinleme Uygulaması (Upstream Original):</strong><br>
+                                <a href="https://github.com/ozansarier/enkazdinlemeuygulamasi" target="_blank" rel="noopener noreferrer">
+                                    https://github.com/ozansarier/enkazdinlemeuygulamasi
+                                </a>
+                                <p class="source-desc">Enkaz arama-kurtarma ses analiz algoritmaları ve frekans filtreleme referansı.</p>
+                            </li>
+                            <li>
+                                <strong>Qaul Mesh Network:</strong><br>
+                                <a href="https://github.com/qaul/qaul.net" target="_blank" rel="noopener noreferrer">
+                                    https://github.com/qaul/qaul.net
+                                </a>
+                                <p class="source-desc">İnternetsiz bağımsız P2P iletişim ve acil durum mesh ağ protokolleri.</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <hr class="divider">
+
+                    <!-- INTERNATIONAL LEGAL DISCLAIMER & BETA NOTICE -->
+                    <div class="legal-box alert alert-warning">
+                        <div class="legal-title">
+                            ⚖️ ULUSLARARASI YASAL SORUMLULUK REDDİ VE TEST BİLDİRİMİ / INTERNATIONAL LEGAL DISCLAIMER & TEST PHASE NOTICE
+                        </div>
+                        
+                        <div class="legal-lang tr-text">
+                            <h5>[TR] Yasal Sorumluluk Reddi (Legal Disclaimer)</h5>
+                            <p>
+                                1. <strong>Test ve Geliştirme Aşaması:</strong> Bu uygulama (MeshengerTR) aktif test ve geliştirme aşamasındadır (BETA). Uygulama hiçbir koşulda resmi bir arama-kurtarma cihazı veya garanti edilen tek acil durum iletişim kanalı olarak değerlendirilemez.<br>
+                                2. <strong>Garanti Reddi:</strong> İşbu yazılım "OLDUĞU GİBİ" (AS IS) sunulmakta olup, kesintisiz çalışma, verilerin iletilmesi veya enkaz altındaki seslerin %100 tespiti konusunda açık veya zımni hiçbir garanti verilmemektedir.<br>
+                                3. <strong>Sorumluluk Sınırı:</strong> Geliştiriciler ve katkıda bulunanlar; afet anlarında yaşanabilecek iletişim aksamalarından, cihaz donanım yetersizliklerinden veya yazılımın kullanımından doğabilecek doğrudan veya dolaylı hiçbir zarar, kayıp veya yaralanmadan sorumlu tutulamaz. Hayati acil durumlarda öncelikle resmi afet yönetimi kurumlarının (AFAD, AKUT, 112 vb.) talimatlarına uyulmalıdır.
+                            </p>
+                        </div>
+
+                        <hr class="divider-light">
+
+                        <div class="legal-lang en-text">
+                            <h5>[EN] International Legal Disclaimer & Disclaimer of Liability</h5>
+                            <p>
+                                1. <strong>Beta & Test Phase:</strong> MeshengerTR is an open-source software currently under active testing and development (BETA). It is NOT a certified life-saving medical or primary search-and-rescue apparatus.<br>
+                                2. <strong>No Warranty ("AS IS"):</strong> This software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, network continuity, or acoustic detection accuracy.<br>
+                                3. <strong>Limitation of Liability:</strong> In no event shall the authors, core developers, or copyright holders be liable for any claim, damages, or injury arising from, out of, or in connection with the software or the use of emergency P2P signals during disasters. Users must always prioritize official emergency protocols and certified first responders.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-tab="tab-beacon">
+            <span class="nav-icon">🚨</span>
+            <span class="nav-label">Enkaz Dinleme</span>
+        </button>
+        <button class="nav-btn" data-tab="tab-contacts">
+            <span class="nav-icon">👥</span>
+            <span class="nav-label">Kişiler</span>
+        </button>
+        <button class="nav-btn" data-tab="tab-calls">
+            <span class="nav-icon">📞</span>
+            <span class="nav-label">Görüşme</span>
+        </button>
+        <button class="nav-btn" data-tab="tab-about">
+            <span class="nav-icon">ℹ️</span>
+            <span class="nav-label">Hakkında</span>
+        </button>
+    </nav>
+
+    <!-- Strobe Light Overlay Screen -->
+    <div id="strobe-overlay" class="strobe-overlay" style="display: none;">
+        <button id="btn-stop-strobe" class="btn btn-light btn-lg">✖ FLAŞI DURDUR</button>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

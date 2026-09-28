@@ -1,0 +1,414 @@
+/*
+ * MeshengerTR PWA Stylesheet
+ * Responsive, Dark-mode, ISO 22324 Compliant
+ */
+
+:root {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --accent-red: #dc2626;
+  --accent-blue: #2563eb;
+  --accent-green: #16a34a;
+  --accent-amber: #d97706;
+  --accent-indigo: #4338ca;
+  --text-main: #ffffff;
+  --text-sub: #94a3b8;
+  --border-color: #334155;
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header Navbar */
+header {
+  background-color: var(--accent-red);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.header-title h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.header-title p {
+  font-size: 0.75rem;
+  color: #fee2e2;
+  margin-top: 2px;
+}
+
+.install-pwa-btn {
+  background: #ffffff;
+  color: var(--accent-red);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: none;
+  transition: transform 0.2s;
+}
+
+.install-pwa-btn:active {
+  transform: scale(0.95);
+}
+
+/* Tabs Navigation */
+nav.tab-bar {
+  display: flex;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 14px 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.tab-btn.active {
+  color: #ffffff;
+  border-bottom-color: var(--accent-indigo);
+  background-color: rgba(67, 56, 202, 0.15);
+}
+
+/* Container & Sections */
+main.content-area {
+  flex: 1;
+  padding: 16px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.tab-section {
+  display: none;
+}
+
+.tab-section.active {
+  display: block;
+}
+
+/* Grid Layout for Disaster Tab */
+.disaster-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .disaster-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+}
+
+.card-beacon-switch {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.card-status {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+}
+
+.status-active {
+  color: #4ade80 !important;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #475569;
+  transition: .3s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-green);
+}
+
+input:checked + .slider:before {
+  transform: translateX(24px);
+}
+
+/* Emergency Status Radio Options */
+.status-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.status-btn {
+  padding: 12px 6px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: white;
+  cursor: pointer;
+  background-color: #334155;
+  transition: background-color 0.2s, transform 0.1s;
+  min-height: 48px;
+}
+
+.status-btn:active {
+  transform: scale(0.97);
+}
+
+.status-btn.selected-sos {
+  background-color: var(--accent-red);
+}
+
+.status-btn.selected-medical {
+  background-color: var(--accent-blue);
+}
+
+.status-btn.selected-safe {
+  background-color: var(--accent-green);
+}
+
+/* Form Inputs */
+.input-group {
+  margin-top: 12px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-sub);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  background-color: #0f172a;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+/* Whistle & Strobe Action Buttons */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.action-btn {
+  padding: 14px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: white;
+  cursor: pointer;
+  min-height: 52px;
+}
+
+.btn-whistle {
+  background-color: var(--accent-amber);
+}
+
+.btn-strobe {
+  background-color: #4f46e5;
+}
+
+.btn-active-red {
+  background-color: var(--accent-red) !important;
+}
+
+/* Rubble Audio Card */
+.card-rubble-audio {
+  background-color: #1e1b4b;
+  border-color: #3730a3;
+}
+
+.gain-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.gain-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background-color: #312e81;
+  color: white;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gain-btn.active {
+  background-color: #4338ca;
+}
+
+/* Audio Visualizer Canvas */
+.audio-visualizer-container {
+  margin-top: 10px;
+}
+
+canvas#audioCanvas {
+  width: 100%;
+  height: 48px;
+  background-color: #0f172a;
+  border-radius: 6px;
+  display: block;
+}
+
+.peak-warning {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 6px;
+  color: #818cf8;
+}
+
+.peak-detected {
+  color: #ef4444 !important;
+}
+
+/* Signal List Cards */
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.signal-card {
+  background-color: var(--card-bg);
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 5px solid var(--accent-green);
+}
+
+.signal-card.sos {
+  border-left-color: var(--accent-red);
+}
+
+.signal-card.medical {
+  border-left-color: var(--accent-blue);
+}
+
+/* Strobe Overlay */
+#strobeOverlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background-color: white;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  cursor: pointer;
+}
+
+#strobeOverlay h2 {
+  font-size: 1.8rem;
+  color: black;
+}
+
+/* Legal Card */
+.legal-card {
+  background-color: #450a0a;
+  border-color: #991b1b;
+}
+
+.legal-card h3 {
+  color: #ef4444;
+  margin-bottom: 8px;
+}
+
+.legal-card p {
+  color: #fecaca;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
