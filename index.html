@@ -83,7 +83,10 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="editNotes">Acil Durum / Tıbbi Notunuz (Mesh Ağda Paylaşılır):</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label for="editNotes" style="margin-bottom:0;">Acil Durum / Tıbbi Notunuz:</label>
+                        <button id="btnGetLocation" class="btn-location-chip" type="button">📍 GPS Konum Ekle</button>
+                    </div>
                     <input type="text" id="editNotes" class="input-field" placeholder="Örn: 2. Kat enkaz altı, Kan Grubu A Rh+">
                 </div>
             </div>
@@ -247,7 +250,7 @@
     <!-- Strobe Light Overlay -->
     <div id="strobeOverlay">
         <h2>⚡ SOS FLAŞÖR AKTİF ⚡</h2>
-        <button id="btnCloseStrobe" class="btn-close-strobe" onclick="stopStrobe()">✖ FLAŞI DURDUR</button>
+        <button id="btnCloseStrobe" class="btn-close-strobe" type="button">✖ FLAŞI DURDUR</button>
     </div>
 
     <!-- Core App Logic Script -->

@@ -51,7 +51,10 @@ tabBtns.forEach((btn) => {
     tabSections.forEach((s) => s.classList.remove('active'));
 
     btn.classList.add('active');
-    document.getElementById(targetTab).classList.add('active');
+    const targetSection = document.getElementById(targetTab);
+    if (targetSection) {
+      targetSection.classList.add('active');
+    }
   });
 });
 
@@ -65,24 +68,31 @@ const activeSignalsMap = new Map();
 const switchBeacon = document.getElementById('switchBeacon');
 const textBeaconStatus = document.getElementById('textBeaconStatus');
 const editNotes = document.getElementById('editNotes');
+const btnGetLocation = document.getElementById('btnGetLocation');
 const signalListContainer = document.getElementById('signalListContainer');
 
-switchBeacon.addEventListener('change', (e) => {
-  isBeaconActive = e.target.checked;
-  if (isBeaconActive) {
-    textBeaconStatus.textContent = 'Yayın Açık (Wi-Fi UDP & Mesh Active)';
-    textBeaconStatus.classList.add('status-active');
-    startBeaconBroadcast();
-  } else {
-    textBeaconStatus.textContent = 'Yayın Kapalı / Broadcast Inactive';
-    textBeaconStatus.classList.remove('status-active');
-    stopBeaconBroadcast();
+if (switchBeacon) {
+  switchBeacon.addEventListener('change', (e) => {
+    isBeaconActive = e.target.checked;
+    if (isBeaconActive) {
+      if (textBeaconStatus) {
+        textBeaconStatus.textContent = 'Yayın Açık (Wi-Fi UDP & Mesh Active)';
+        textBeaconStatus.classList.add('status-active');
+      }
+      startBeaconBroadcast();
+    } else {
+      if (textBeaconStatus) {
+        textBeaconStatus.textContent = 'Yayın Kapalı / Broadcast Inactive';
+        textBeaconStatus.classList.remove('status-active');
+      }
+      stopBeaconBroadcast();
 
-    if (isRubbleListening) {
-      stopRubbleAudio();
+      if (isRubbleListening) {
+        stopRubbleAudio();
+      }
     }
-  }
-});
+  });
+}
 
 // Status Option Selection
 const statusBtns = document.querySelectorAll('.status-btn');
@@ -107,12 +117,46 @@ statusBtns.forEach((btn) => {
   });
 });
 
-editNotes.addEventListener('input', (e) => {
-  medicalNotes = e.target.value;
-});
+if (editNotes) {
+  editNotes.addEventListener('input', (e) => {
+    medicalNotes = e.target.value;
+  });
+}
+
+// GPS Location Acquisition
+if (btnGetLocation) {
+  btnGetLocation.addEventListener('click', () => {
+    if ('geolocation' in navigator) {
+      btnGetLocation.textContent = '⌛ Konum Alınıyor...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(5);
+          const lng = pos.coords.longitude.toFixed(5);
+          const locStr = `GPS: ${lat}, ${lng}`;
+          if (editNotes) {
+            editNotes.value = editNotes.value ? `${editNotes.value} | ${locStr}` : locStr;
+            medicalNotes = editNotes.value;
+          }
+          btnGetLocation.textContent = '✅ GPS Eklendi';
+          setTimeout(() => { btnGetLocation.textContent = '📍 GPS Konum Ekle'; }, 3000);
+          if (isBeaconActive) sendDisasterBeacon();
+        },
+        (err) => {
+          console.error('GPS location error:', err);
+          alert('⚠️ GPS Konumu alınamadı. Lütfen konum izinlerini kontrol edin.');
+          btnGetLocation.textContent = '📍 GPS Konum Ekle';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      alert('⚠️ Cihazınızda GPS desteği bulunamadı.');
+    }
+  });
+}
 
 function startBeaconBroadcast() {
   sendDisasterBeacon();
+  if (beaconInterval) clearInterval(beaconInterval);
   beaconInterval = setInterval(sendDisasterBeacon, 3000);
   simulateIncomingBeacons();
 }
@@ -126,7 +170,7 @@ function stopBeaconBroadcast() {
 
 function sendDisasterBeacon() {
   const signal = {
-    senderName: 'Web-PWA-Node (' + navigator.platform + ')',
+    senderName: 'Web-PWA-Node (' + (navigator.platform || 'Browser') + ')',
     status: currentStatus,
     medicalNotes: medicalNotes || 'PWA Emergency Node',
     timestamp: Date.now(),
@@ -169,7 +213,7 @@ function renderSignalList() {
   if (!signalListContainer) return;
 
   if (activeSignalsMap.size === 0) {
-    signalListContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">Henüz aktif bir sinyal algılanmadı.</p>';
+    signalListContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px; font-size:0.8rem;">Henüz aktif bir sinyal algılanmadı.</p>';
     return;
   }
 
@@ -194,8 +238,8 @@ function renderSignalList() {
           <strong>${sig.senderName}</strong>
           <span style="font-size:0.75rem; font-weight:700; color:white;">${statusBadge}</span>
         </div>
-        <p style="font-size:0.8rem; color:#94a3b8; margin-top:4px;">IP: ${sig.ipAddress} • P2P Mesh Signal</p>
-        <p style="font-size:0.85rem; color:#cbd5e1; margin-top:2px;">Not: ${sig.medicalNotes}</p>
+        <p style="font-size:0.78rem; color:#94a3b8; margin-top:4px;">IP: ${sig.ipAddress} • P2P Mesh Signal</p>
+        <p style="font-size:0.82rem; color:#cbd5e1; margin-top:2px;">Not: ${sig.medicalNotes}</p>
         <p style="font-size:0.7rem; color:#64748b; margin-top:4px;">Son Yayın: ${timeStr}</p>
       </div>
     `;
@@ -223,18 +267,20 @@ const gainBtns = document.querySelectorAll('.gain-btn');
 const audioCanvas = document.getElementById('audioCanvas');
 const peakWarningText = document.getElementById('peakWarningText');
 
-switchRubbleAudio.addEventListener('change', async (e) => {
-  if (e.target.checked) {
-    if (!isBeaconActive) {
-      alert('⚠️ Lütfen önce Afet Kipi Yayınını etkinleştirin!');
-      e.target.checked = false;
-      return;
+if (switchRubbleAudio) {
+  switchRubbleAudio.addEventListener('change', async (e) => {
+    if (e.target.checked) {
+      if (!isBeaconActive) {
+        alert('⚠️ Lütfen önce Afet Kipi Yayınını etkinleştirin!');
+        e.target.checked = false;
+        return;
+      }
+      await startRubbleAudio();
+    } else {
+      stopRubbleAudio();
     }
-    await startRubbleAudio();
-  } else {
-    stopRubbleAudio();
-  }
-});
+  });
+}
 
 gainBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -279,14 +325,16 @@ async function startRubbleAudio() {
     gainNode.connect(audioCtx.destination);
 
     isRubbleListening = true;
-    textRubbleAudioStatus.textContent = `Dinleme Açık (${currentGain}x Kazanç • Gürültü Filtreli)`;
-    textRubbleAudioStatus.classList.add('status-active');
+    if (textRubbleAudioStatus) {
+      textRubbleAudioStatus.textContent = `Dinleme Açık (${currentGain}x Kazanç • Gürültü Filtreli)`;
+      textRubbleAudioStatus.classList.add('status-active');
+    }
 
     renderAudioCanvas();
   } catch (err) {
     console.error('Microphone access failed:', err);
     alert('⚠️ Mikrofon İzni Gerekli!');
-    switchRubbleAudio.checked = false;
+    if (switchRubbleAudio) switchRubbleAudio.checked = false;
   }
 }
 
@@ -347,11 +395,15 @@ function renderAudioCanvas() {
     const amplitudePercentage = Math.min(100, Math.floor((avg / 128) * 100));
 
     if (amplitudePercentage > 65) {
-      peakWarningText.textContent = '⚠️ YÜKSEK SES / TIKIRTI ALGILANDI! (PEAK DETECTED)';
-      peakWarningText.classList.add('peak-detected');
+      if (peakWarningText) {
+        peakWarningText.textContent = '⚠️ YÜKSEK SES / TIKIRTI ALGILANDI! (PEAK DETECTED)';
+        peakWarningText.classList.add('peak-detected');
+      }
     } else {
-      peakWarningText.textContent = 'Ortam Dinleniyor... / Monitoring Audio...';
-      peakWarningText.classList.remove('peak-detected');
+      if (peakWarningText) {
+        peakWarningText.textContent = 'Ortam Dinleniyor... / Monitoring Audio...';
+        peakWarningText.classList.remove('peak-detected');
+      }
     }
   };
 
@@ -369,20 +421,23 @@ let isStrobeActive = false;
 
 const btnWhistle = document.getElementById('btnWhistle');
 const btnStrobe = document.getElementById('btnStrobe');
+const btnCloseStrobe = document.getElementById('btnCloseStrobe');
 const strobeOverlay = document.getElementById('strobeOverlay');
 
-btnWhistle.addEventListener('click', () => {
-  if (!isBeaconActive) {
-    alert('⚠️ Lütfen önce Afet Kipi Yayınını etkinleştirin!');
-    return;
-  }
+if (btnWhistle) {
+  btnWhistle.addEventListener('click', () => {
+    if (!isBeaconActive) {
+      alert('⚠️ Lütfen önce Afet Kipi Yayınını etkinleştirin!');
+      return;
+    }
 
-  if (isWhistleActive) {
-    stopWhistle();
-  } else {
-    startWhistle();
-  }
-});
+    if (isWhistleActive) {
+      stopWhistle();
+    } else {
+      startWhistle();
+    }
+  });
+}
 
 function startWhistle() {
   whistleAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -394,8 +449,10 @@ function startWhistle() {
   whistleOsc.start();
 
   isWhistleActive = true;
-  btnWhistle.textContent = '🔊 SIREN DURDUR';
-  btnWhistle.classList.add('btn-active-red');
+  if (btnWhistle) {
+    btnWhistle.textContent = '🔊 SIREN DURDUR';
+    btnWhistle.classList.add('btn-active-red');
+  }
 }
 
 function stopWhistle() {
@@ -406,33 +463,44 @@ function stopWhistle() {
   whistleAudioCtx = null;
   isWhistleActive = false;
 
-  btnWhistle.textContent = '🔊 3.5 kHz DÜDÜK';
-  btnWhistle.classList.remove('btn-active-red');
+  if (btnWhistle) {
+    btnWhistle.textContent = '🔊 3.5 kHz DÜDÜK';
+    btnWhistle.classList.remove('btn-active-red');
+  }
 }
 
-btnStrobe.addEventListener('click', () => {
-  if (!isBeaconActive) {
-    alert('⚠️ Lütfen önce Afet Kipi Yayınını etkinleştirin!');
-    return;
-  }
+if (btnStrobe) {
+  btnStrobe.addEventListener('click', () => {
+    if (!isBeaconActive) {
+      alert('⚠️ Lütfen önce Afet Kipi Yayınını etkinleştirin!');
+      return;
+    }
 
-  if (isStrobeActive) {
-    stopStrobe();
-  } else {
-    startStrobe();
-  }
-});
+    if (isStrobeActive) {
+      stopStrobe();
+    } else {
+      startStrobe();
+    }
+  });
+}
 
 function startStrobe() {
   isStrobeActive = true;
-  strobeOverlay.style.display = 'flex';
-  btnStrobe.textContent = '🔦 FLAŞ DURDUR';
-  btnStrobe.classList.add('btn-active-red');
+  if (strobeOverlay) {
+    strobeOverlay.style.display = 'flex';
+  }
+  if (btnStrobe) {
+    btnStrobe.textContent = '🔦 FLAŞ DURDUR';
+    btnStrobe.classList.add('btn-active-red');
+  }
 
   let isWhite = true;
   strobeInterval = setInterval(() => {
-    strobeOverlay.style.backgroundColor = isWhite ? '#ffffff' : '#dc2626';
-    strobeOverlay.querySelector('h2').style.color = isWhite ? '#000000' : '#ffffff';
+    if (strobeOverlay) {
+      strobeOverlay.style.backgroundColor = isWhite ? '#ffffff' : '#dc2626';
+      const h2 = strobeOverlay.querySelector('h2');
+      if (h2) h2.style.color = isWhite ? '#000000' : '#ffffff';
+    }
     isWhite = !isWhite;
   }, 150);
 }
@@ -442,9 +510,25 @@ function stopStrobe() {
   strobeInterval = null;
   isStrobeActive = false;
 
-  strobeOverlay.style.display = 'none';
-  btnStrobe.textContent = '🔦 STROBE FLAŞ';
-  btnStrobe.classList.remove('btn-active-red');
+  if (strobeOverlay) {
+    strobeOverlay.style.display = 'none';
+  }
+  if (btnStrobe) {
+    btnStrobe.textContent = '🔦 STROBE FLAŞ';
+    btnStrobe.classList.remove('btn-active-red');
+  }
 }
 
-strobeOverlay.addEventListener('click', stopStrobe);
+if (strobeOverlay) {
+  strobeOverlay.addEventListener('click', stopStrobe);
+}
+if (btnCloseStrobe) {
+  btnCloseStrobe.addEventListener('click', (e) => {
+    e.stopPropagation();
+    stopStrobe();
+  });
+}
+
+// Global Exports
+window.stopStrobe = stopStrobe;
+window.stopWhistle = stopWhistle;

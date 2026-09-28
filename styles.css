@@ -300,6 +300,22 @@ input:checked + .slider:before {
   margin-bottom: 4px;
 }
 
+.btn-location-chip {
+  background: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-location-chip:hover {
+  background: rgba(37, 99, 235, 0.4);
+}
+
 .input-field {
   width: 100%;
   padding: 10px 12px;
